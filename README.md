@@ -1,78 +1,51 @@
-# React + TypeScript + Vite
+# Task Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A local task manager for named lists. Pick a list from the sidebar, add tasks, reorder the open ones, and mark them done. Everything stays in the browser.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Create, rename, and remove lists. Removing a list asks for confirmation, because its tasks go with it.
+- Select one list at a time. The main panel shows that list’s name, an add form, and its tasks.
+- Add, edit, and remove tasks. Removing a task asks for confirmation. Edit saves with Enter and cancels with Escape.
+- Reject duplicate list names and duplicate task titles in the same list. The check is case-insensitive and includes completed tasks. Renaming a list or task does not treat it as a duplicate of itself.
+- Drag open tasks to reorder them. Order is the array order, so a reload keeps it.
+- Mark a task done. It moves into a Completed section and can no longer be dragged. Unchecking it returns it to the open list in its stored position. The sidebar count is open tasks only.
+- An empty app stays empty. Deleting every list and reloading still shows “No lists yet.”
 
-## React Compiler
+## Stack
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- [Vite](https://vite.dev/) and React 19 with TypeScript
+- [Redux Toolkit](https://redux-toolkit.js.org/) for lists, the selected list, and tasks
+- [Tailwind CSS](https://tailwindcss.com/) for layout and theme
+- [dnd kit](https://dndkit.com/) for vertical reorder of open tasks
+- [Motion](https://motion.dev/) for enter, exit, and the typewriter line. Reduced motion is respected.
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
+There is no backend. The store is written to `localStorage` under `task-manager.lists`.
 
-## Expanding the ESLint configuration
+## Run it
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Other scripts:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run build
+npm run lint
+npm run preview
 ```
+
+## Layout
+
+```text
+src/
+  App.tsx                  sidebar and selected list
+  components/              button, confirm dialog, icons, typewriter
+  features/lists/          sidebar and one list row
+  features/tasks/          composer, list, and task card
+  utils/                   store, slice, and localStorage
+```
+
+State is one slice: `lists`, each with ordered `tasks`, plus `selectedListId`. A task is `{ id, title, done }`. `done` only changes where the task is shown. It does not change its place in the array.
