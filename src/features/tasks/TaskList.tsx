@@ -16,12 +16,14 @@ import {
 import { AnimatePresence } from 'motion/react'
 import { useCallback, useState } from 'react'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
-import { useAppDispatch, useAppSelector } from '../../app/hooks'
-import { TaskCard } from './TaskCard'
+import { useAppDispatch, useAppSelector } from '../../utils/hooks'
+import { CompletedTask, TaskCard } from './TaskCard'
 import { removeTask, reorderTasks, selectTasks, type Task } from '../../utils/tasksSlice'
 
 export function TaskList() {
   const tasks = useAppSelector(selectTasks)
+  const openTasks = tasks.filter((task) => !task.done)
+  const completedTasks = tasks.filter((task) => task.done)
   const dispatch = useAppDispatch()
   const [pendingTask, setPendingTask] = useState<Task | null>(null)
   const sensors = useSensors(
@@ -62,12 +64,12 @@ export function TaskList() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={tasks.map((task) => task.id)}
+          items={openTasks.map((task) => task.id)}
           strategy={verticalListSortingStrategy}
         >
           <ul className="mt-4 flex list-none flex-col p-0">
             <AnimatePresence initial={false}>
-              {tasks.map((task) => (
+              {openTasks.map((task) => (
                 <TaskCard
                   key={task.id}
                   task={task}
@@ -78,6 +80,24 @@ export function TaskList() {
           </ul>
         </SortableContext>
       </DndContext>
+      <section className={completedTasks.length > 0 ? 'mt-8' : undefined}>
+        {completedTasks.length > 0 ? (
+          <h2 className="text-sm font-medium text-content">
+            Completed {completedTasks.length}
+          </h2>
+        ) : null}
+        <ul className="flex list-none flex-col p-0">
+          <AnimatePresence initial={false}>
+            {completedTasks.map((task) => (
+              <CompletedTask
+                key={task.id}
+                task={task}
+                onRemove={() => setPendingTask(task)}
+              />
+            ))}
+          </AnimatePresence>
+        </ul>
+      </section>
       <AnimatePresence>
         {pendingTask ? (
           <ConfirmDialog

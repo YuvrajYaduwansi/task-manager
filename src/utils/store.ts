@@ -1,25 +1,25 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { readStoredTasks, writeStoredTasks } from '../utils/taskStorage'
+import { readStoredState, writeStoredState } from '../utils/taskStorage'
 import tasksReducer from '../utils/tasksSlice'
+
+const persisted = readStoredState()
 
 export const store = configureStore({
   reducer: {
     tasks: tasksReducer,
   },
   preloadedState: {
-    tasks: {
-      items: readStoredTasks(),
-    },
+    tasks: persisted,
   },
 })
 
-let storedTasks = store.getState().tasks.items
+let storedState = store.getState().tasks
 
 store.subscribe(() => {
-  const tasks = store.getState().tasks.items
-  if (tasks === storedTasks) return
-  storedTasks = tasks
-  writeStoredTasks(tasks)
+  const nextState = store.getState().tasks
+  if (nextState === storedState) return
+  storedState = nextState
+  writeStoredState(nextState)
 })
 
 export type RootState = ReturnType<typeof store.getState>

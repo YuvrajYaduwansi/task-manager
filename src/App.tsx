@@ -1,10 +1,10 @@
-import { AnimatePresence, motion, MotionConfig } from 'motion/react'
-import { useState, type FormEvent } from 'react'
-import { useAppDispatch, useAppSelector } from './app/hooks'
-import { Button } from './components/Button'
+import { motion, MotionConfig } from 'motion/react'
+import { useAppSelector } from './utils/hooks'
 import { Typewriter } from './components/Typewriter'
+import { ListSidebar } from './features/lists/ListSidebar'
+import { TaskComposer } from './features/tasks/TaskComposer'
 import { TaskList } from './features/tasks/TaskList'
-import { addTask, hasTaskTitle, selectTasks } from './utils/tasksSlice'
+import { selectSelectedList, selectTasks } from './utils/tasksSlice'
 
 const rise = {
   hidden: { opacity: 0, y: 8 },
@@ -12,92 +12,59 @@ const rise = {
 }
 
 function App() {
-  const [title, setTitle] = useState('')
-  const [duplicate, setDuplicate] = useState(false)
-  const tasks = useAppSelector(selectTasks)
-  const dispatch = useAppDispatch()
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const trimmed = title.trim()
-    if (!trimmed) return
-    if (hasTaskTitle(tasks, trimmed)) {
-      setDuplicate(true)
-      return
-    }
-    dispatch(addTask(trimmed))
-    setTitle('')
-    setDuplicate(false)
-  }
+  const selected = useAppSelector(selectSelectedList)
 
   return (
     <MotionConfig reducedMotion="user">
-      <main className="mx-auto w-full max-w-xl px-6 py-12 text-left">
-        <motion.h1
-          className="text-3xl tracking-tight"
-          variants={rise}
-          initial="hidden"
-          animate="visible"
-          transition={{ duration: 0.45, ease: 'easeOut' }}
-        >
-          Tasks
-        </motion.h1>
-        <Typewriter
-          className="mt-3 min-h-[1.45em] text-content"
-          text="Add a task, drag it into place, and find the same list when you come back."
-          delayMs={280}
-        />
-        <form className="mt-8" onSubmit={handleSubmit}>
-          <motion.label
-            className="mb-2 block text-sm font-medium text-heading"
-            htmlFor="task-title"
-            variants={rise}
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 0.4, delay: 0.15, ease: 'easeOut' }}
-          >
-            Task
-          </motion.label>
-          <motion.div
-            className="flex gap-2"
-            variants={rise}
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 0.45, delay: 0.28, ease: 'easeOut' }}
-          >
-            <input
-              id="task-title"
-              className="min-w-0 flex-1 rounded-md border border-line bg-canvas px-4 py-2 text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              value={title}
-              aria-invalid={duplicate}
-              aria-describedby={duplicate ? 'task-title-error' : undefined}
-              onChange={(event) => {
-                setTitle(event.target.value)
-                setDuplicate(false)
-              }}
-              placeholder="Write a task"
-            />
-            <Button type="submit" variant="primary" text="Add" />
-          </motion.div>
-          <AnimatePresence>
-            {duplicate ? (
-              <motion.p
-                id="task-title-error"
-                role="alert"
-                className="mt-2 text-sm text-danger"
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.2 }}
-              >
-                Task already exists
-              </motion.p>
-            ) : null}
-          </AnimatePresence>
-        </form>
-        <TaskList />
-      </main>
+      <div className="flex min-h-svh flex-col bg-canvas md:flex-row">
+        <ListSidebar />
+        <main className="min-w-0 flex-1 px-5 py-8 md:px-10 md:py-10">
+          <div className="mx-auto w-full max-w-2xl">
+            {selected ? (
+              <SelectedList id={selected.id} name={selected.name} />
+            ) : (
+              <EmptyLists />
+            )}
+          </div>
+        </main>
+      </div>
     </MotionConfig>
+  )
+}
+
+function SelectedList({ id, name }: { id: string; name: string }) {
+  const tasks = useAppSelector(selectTasks)
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={rise}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+    >
+      <h1 className="text-3xl tracking-tight text-yellow-500">{name}</h1>
+      <Typewriter
+        className="mt-3 min-h-[1.45em] text-content"
+        text="Add a task, drag it into place, and find this list when you come back."
+        delayMs={280}
+      />
+      <TaskComposer listId={id} />
+      <TaskList key={id} />
+      {tasks.length === 0 ? (
+        <p className="mt-6 text-content">No tasks in this list yet.</p>
+      ) : null}
+    </motion.div>
+  )
+}
+
+function EmptyLists() {
+  return (
+    <div className="pt-16">
+      <h1 className="text-3xl tracking-tight">No lists yet</h1>
+      <p className="mt-3 max-w-md text-content">
+        Add a list, then fill it with tasks.
+      </p>
+    </div>
   )
 }
 

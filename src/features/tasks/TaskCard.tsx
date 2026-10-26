@@ -3,14 +3,21 @@ import { motion } from 'motion/react'
 import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { useAppDispatch, useAppSelector } from '../../app/hooks'
+import crossIcon from '../../assets/cross.svg'
+import dragIcon from '../../assets/drag.svg'
+import editIcon from '../../assets/edit.svg'
+import tickIcon from '../../assets/tick.svg'
+import { Icon } from '../../components/Icon'
+import { useAppDispatch, useAppSelector } from '../../utils/hooks'
 import {
   hasTaskTitle,
   selectTasks,
+  setTaskDone,
   updateTask,
   type Task,
 } from '../../utils/tasksSlice'
-
+import { TaskCheckbox } from '../../components/TaskCheckbox'
+import { cardMotion, iconButtonClassName } from '../../utils/misc'
 type TaskCardProps = {
   task: Task
   onRemove: () => void
@@ -22,9 +29,6 @@ const editErrorMessage: Record<EditError, string> = {
   empty: 'Task cannot be empty',
   duplicate: 'Task already exists',
 }
-
-const iconButtonClassName =
-  'inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md bg-transparent p-0 text-content hover:bg-line hover:text-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 export function TaskCard({ task, onRemove }: TaskCardProps) {
   const tasks = useAppSelector(selectTasks)
@@ -109,8 +113,14 @@ export function TaskCard({ task, onRemove }: TaskCardProps) {
           disabled={editing}
           {...(editing ? {} : { ...attributes, ...listeners })}
         >
-          <GripIcon />
+          <Icon src={dragIcon} />
         </button>
+        <TaskCheckbox
+          checked={false}
+          label={task.title}
+          disabled={editing}
+          onChange={() => dispatch(setTaskDone({ id: task.id, done: true }))}
+        />
         {editing ? (
           <input
             ref={inputRef}
@@ -136,7 +146,7 @@ export function TaskCard({ task, onRemove }: TaskCardProps) {
               aria-label="Save task"
               onClick={saveEditing}
             >
-              <TickIcon />
+              <Icon src={tickIcon} />
             </button>
             <button
               type="button"
@@ -144,7 +154,7 @@ export function TaskCard({ task, onRemove }: TaskCardProps) {
               aria-label="Cancel editing"
               onClick={cancelEditing}
             >
-              <CrossIcon />
+              <Icon src={crossIcon} />
             </button>
           </>
         ) : (
@@ -158,7 +168,7 @@ export function TaskCard({ task, onRemove }: TaskCardProps) {
               aria-label={`Edit ${task.title}`}
               onClick={startEditing}
             >
-              <PencilIcon />
+              <Icon src={editIcon} />
             </button>
             <button
               type="button"
@@ -166,7 +176,7 @@ export function TaskCard({ task, onRemove }: TaskCardProps) {
               aria-label={`Remove ${task.title}`}
               onClick={onRemove}
             >
-              <CrossIcon />
+              <Icon src={crossIcon} />
             </button>
           </>
         )}
@@ -181,58 +191,29 @@ export function TaskCard({ task, onRemove }: TaskCardProps) {
   )
 }
 
-function GripIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-      <circle cx="6" cy="4" r="1.1" fill="currentColor" />
-      <circle cx="10" cy="4" r="1.1" fill="currentColor" />
-      <circle cx="6" cy="8" r="1.1" fill="currentColor" />
-      <circle cx="10" cy="8" r="1.1" fill="currentColor" />
-      <circle cx="6" cy="12" r="1.1" fill="currentColor" />
-      <circle cx="10" cy="12" r="1.1" fill="currentColor" />
-    </svg>
-  )
-}
+export function CompletedTask({ task, onRemove }: TaskCardProps) {
+  const dispatch = useAppDispatch()
 
-function PencilIcon() {
   return (
-    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-      <path
-        d="M2.5 11.4 11.7 2.2a1.2 1.2 0 0 1 1.7 1.7L4.2 13.1 2 13.6l.5-2.2Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function TickIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-      <path
-        d="M3.5 8.5 6.5 11.5 12.5 4.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function CrossIcon() {
-  return (
-    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-      <path
-        d="M3.5 3.5 12.5 12.5M12.5 3.5 3.5 12.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
+    <motion.li {...cardMotion} className="overflow-hidden">
+      <div className="flex items-center gap-2 rounded-md bg-card py-2 pr-2 pl-2">
+        <TaskCheckbox
+          checked
+          label={task.title}
+          onChange={() => dispatch(setTaskDone({ id: task.id, done: false }))}
+        />
+        <span className="min-w-0 flex-1 wrap-break-word text-content line-through">
+          {task.title}
+        </span>
+        <button
+          type="button"
+          className={iconButtonClassName}
+          aria-label={`Remove ${task.title}`}
+          onClick={onRemove}
+        >
+          <Icon src={crossIcon} />
+        </button>
+      </div>
+    </motion.li>
   )
 }
