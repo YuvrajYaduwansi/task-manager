@@ -13,6 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
+import { AnimatePresence } from 'motion/react'
 import { useCallback, useState } from 'react'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
@@ -52,8 +53,6 @@ export function TaskList() {
     [dispatch],
   )
 
-  if (tasks.length === 0) return null
-
   return (
     <>
       <DndContext
@@ -66,26 +65,31 @@ export function TaskList() {
           items={tasks.map((task) => task.id)}
           strategy={verticalListSortingStrategy}
         >
-          <ul className="mt-6 flex list-none flex-col gap-2 p-0">
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onRemove={() => setPendingTask(task)}
-              />
-            ))}
+          <ul className="mt-4 flex list-none flex-col p-0">
+            <AnimatePresence initial={false}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onRemove={() => setPendingTask(task)}
+                />
+              ))}
+            </AnimatePresence>
           </ul>
         </SortableContext>
       </DndContext>
-      {pendingTask ? (
-        <ConfirmDialog
-          title="Remove task"
-          description={`Are you sure you want to remove "${pendingTask.title}"?`}
-          confirmLabel="Yes"
-          onConfirm={confirmRemove}
-          onCancel={closeDialog}
-        />
-      ) : null}
+      <AnimatePresence>
+        {pendingTask ? (
+          <ConfirmDialog
+            key={pendingTask.id}
+            title="Remove task"
+            description={`Are you sure you want to remove "${pendingTask.title}"?`}
+            confirmLabel="Yes"
+            onConfirm={confirmRemove}
+            onCancel={closeDialog}
+          />
+        ) : null}
+      </AnimatePresence>
     </>
   )
 }

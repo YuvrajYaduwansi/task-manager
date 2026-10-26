@@ -1,4 +1,5 @@
 import { useSortable } from '@dnd-kit/sortable'
+import { motion } from 'motion/react'
 import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { twMerge } from 'tailwind-merge'
@@ -83,16 +84,23 @@ export function TaskCard({ task, onRemove }: TaskCardProps) {
   }
 
   return (
-    <li
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Translate.toString(transform),
-        transition,
-      }}
-      className={`group flex flex-col gap-1 rounded-md bg-card py-2 pr-2 pl-2 text-heading ${
-        isDragging ? 'relative z-10 shadow-lg' : ''
-      }`}
+    <motion.li
+      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+      animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      className={isDragging ? 'relative z-10 overflow-visible' : 'overflow-hidden'}
     >
+      <div
+        ref={setNodeRef}
+        style={{
+          transform: CSS.Translate.toString(transform),
+          transition,
+        }}
+        className={`group flex flex-col gap-1 rounded-md bg-card py-2 pr-2 pl-2 text-heading ${
+          isDragging ? 'shadow-lg' : ''
+        }`}
+      >
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -168,7 +176,8 @@ export function TaskCard({ task, onRemove }: TaskCardProps) {
           {editErrorMessage[error]}
         </p>
       ) : null}
-    </li>
+      </div>
+    </motion.li>
   )
 }
 
